@@ -6,9 +6,9 @@
  */
 
 import React from 'react';
-import {useContext, useMemo, useRef, useLayoutEffect} from 'react';
-import {__RouterContext} from 'react-router';
-import {ReactReduxContext} from 'react-redux';
+import { useContext, useMemo, useRef, useLayoutEffect } from 'react';
+import { __RouterContext } from 'react-router';
+import { ReactReduxContext } from 'react-redux';
 
 import ThemeContext from './shared/ThemeContext';
 
@@ -18,6 +18,7 @@ let rendererModule = {
   result: null,
 };
 
+// getLegacyComponent: () => import('../legacy/Greeting')
 export default function lazyLegacyRoot(getLegacyComponent) {
   let componentModule = {
     status: 'pending',
@@ -26,6 +27,7 @@ export default function lazyLegacyRoot(getLegacyComponent) {
   };
 
   return function Wrapper(props) {
+    // returns {render, unmount}, wrap up contexts and render Component to container
     const createLegacyRoot = readModule(rendererModule, () =>
       import('../legacy/createLegacyRoot')
     ).default;
@@ -65,13 +67,18 @@ export default function lazyLegacyRoot(getLegacyComponent) {
       }
     }, [Component, props, context]);
 
-    return <div style={{display: 'contents'}} ref={containerRef} />;
+    // this node is where our legacy Component rendered tree will be mounted
+    return <div style={{ display: 'contents' }} ref={containerRef} />;
   };
 }
 
 // This is similar to React.lazy, but implemented manually.
 // We use this to Suspend rendering of this component until
 // we fetch the component and the legacy React to render it.
+// React.lazy wouldn't work because we want the actual rendering
+// to be done by the inner React but the waiting needs to be done
+// by the outer React.There's just no way to express that via the lazy API.
+
 function readModule(record, createPromise) {
   if (record.status === 'fulfilled') {
     return record.result;
@@ -81,14 +88,14 @@ function readModule(record, createPromise) {
   }
   if (!record.promise) {
     record.promise = createPromise().then(
-      value => {
+      (value) => {
         if (record.status === 'pending') {
           record.status = 'fulfilled';
           record.promise = null;
           record.result = value;
         }
       },
-      error => {
+      (error) => {
         if (record.status === 'pending') {
           record.status = 'rejected';
           record.promise = null;

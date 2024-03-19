@@ -5,11 +5,13 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {useState, useEffect} from 'react';
+import React, { useState, useEffect } from 'react';
 
 export default function useTimer() {
   const [value, setValue] = useState(() => new Date());
+
   useEffect(() => {
+    console.log('Version', React.version);
     const id = setInterval(() => {
       setValue(new Date());
     }, 1000);
